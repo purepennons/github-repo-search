@@ -1,5 +1,6 @@
 import React, { createContext, Component } from 'react';
 import { pick, get } from 'lodash';
+import Bottleneck from 'bottleneck';
 
 import client from '../apollo/';
 import { QUERY_REPOS } from '../apollo/gql';
@@ -9,6 +10,11 @@ const cx = createContext({});
 const NOT_FOUND_ERROR = new Error('not found');
 NOT_FOUND_ERROR.code = 404;
 NOT_FOUND_ERROR.desc = 'not found error';
+
+const limiter = new Bottleneck({
+  maxConcurrent: 1,
+  minTime: 6000
+});
 
 class Provider extends Component {
   defaultValues = {
@@ -62,14 +68,16 @@ class Provider extends Component {
 
     await this.setLoadingState(true);
     try {
-      const { data } = await client.query({
-        query: QUERY_REPOS,
-        variables: {
-          keyword,
-          perPage,
-          page: nextPage
-        }
-      });
+      const { data } = await limiter.schedule(() =>
+        client.query({
+          query: QUERY_REPOS,
+          variables: {
+            keyword,
+            perPage,
+            page: nextPage
+          }
+        })
+      );
       const repos = get(data, ['searchRepos', 'items']);
       if (!repos || repos.length < 1) throw NOT_FOUND_ERROR;
 
