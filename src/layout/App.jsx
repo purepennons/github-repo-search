@@ -1,6 +1,6 @@
 import React, { Component, createRef } from 'react';
 import styled from 'styled-components';
-import { rem, lighten } from 'polished';
+import { rem } from 'polished';
 
 import Context from '../context/';
 import DebounceHookOnChange from '../components/global/DebounceHookOnChange/DebounceHookOnChange';
@@ -37,7 +37,7 @@ class App extends Component {
   render() {
     const {
       className,
-      github: { actions, repos }
+      github: { actions, repos, isLoading }
     } = this.props;
     return (
       <div className={className}>
@@ -61,10 +61,16 @@ class App extends Component {
           <InfiniteScroll
             onFetchMore={actions.fetchMore}
             className="infinite-scroll"
-            // style={{ overflow: 'auto', height: '200px' }}
           >
-            {({ isLoading }) => {
-              return repos.map(repo => <StyledRepo {...repo} key={repo.id} />);
+            {() => {
+              return (
+                <div>
+                  {repos.map(repo => (
+                    <StyledRepo {...repo} key={repo.id} />
+                  ))}
+                  {isLoading && <p className="loading">Loading...</p>}
+                </div>
+              );
             }}
           </InfiniteScroll>
         </main>
@@ -82,7 +88,7 @@ const StyledApp = styled(App)`
     flex-flow: row nowrap;
     justify-content: center;
     align-items: center;
-    border-bottom: 5px solid ${lighten(0.1, '#00c7b9')};
+    border-bottom: 5px solid #00c7b9;
     margin-bottom: 20px;
 
     input[type='text'] {
@@ -103,6 +109,13 @@ const StyledApp = styled(App)`
     .infinite-scroll {
       overflow: auto;
       height: calc(100vh - 120px - 20px);
+    }
+
+    .loading {
+      font-size: ${rem('25px')};
+      font-weight: 600;
+      text-align: center;
+      color: #595a53;
     }
   }
 `;
