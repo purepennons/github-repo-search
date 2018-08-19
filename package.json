@@ -8,6 +8,8 @@
     "apollo-link-rest": "^0.4.4",
     "graphql": "^0.13.2",
     "graphql-anywhere": "^4.1.16",
+    "lodash": "^4.17.10",
+    "normalize.css": "^8.0.0",
     "polished": "^1.9.3",
     "react": "^16.4.2",
     "react-apollo": "^2.1.11",
