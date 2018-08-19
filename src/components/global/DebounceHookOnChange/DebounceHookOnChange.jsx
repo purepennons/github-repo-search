@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { isFunction, isEqual, noop, debounce, pick } from 'lodash';
+import isPromise from 'is-promise';
 
 class DebounceHookOnChange extends Component {
   static propTypes = {
@@ -70,8 +71,15 @@ class DebounceHookOnChange extends Component {
 
   handleChange = (...args) => {
     const { onChange } = this.props;
-    if (isFunction(onChange)) onChange(...args);
-    if (isFunction(this.onDebounceChange)) this.onDebounceChange(...args);
+    const onDebounceChange = isFunction(this.onDebounceChange)
+      ? this.onDebounceChange
+      : noop;
+
+    if (!isFunction(onChange)) return;
+
+    const changeResult = onChange(...args);
+    if (!isPromise(changeResult)) return onDebounceChange(...args);
+    return changeResult.then(() => onDebounceChange(...args));
   };
 
   render() {
