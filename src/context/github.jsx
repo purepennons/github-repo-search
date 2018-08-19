@@ -47,6 +47,8 @@ class Provider extends Component {
 
   fetchMore = async () => {
     const { keyword, nextPage, perPage } = this.state;
+    if (!keyword) return;
+
     await this.setLoadingState(true);
     try {
       const { data } = await client.query({
@@ -54,7 +56,7 @@ class Provider extends Component {
         variables: {
           keyword,
           perPage,
-          page: nextPage,
+          page: nextPage
         }
       });
       await Promise.all([

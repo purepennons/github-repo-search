@@ -9,10 +9,17 @@ export const QUERY_REPOS = gql`
       ) {
       items @type(name: "Repo") {
         id,
-        name,
-        owner @type(name: "User"),
+        full_name,
         html_url,
-        description
+        description,
+        language,
+        stargazers_count,
+        owner @type(name: "User") {
+          id,
+          login,
+          avatar_url,
+          html_url,
+        },
       }
     }
   }
