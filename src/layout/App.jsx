@@ -37,7 +37,7 @@ class App extends Component {
   render() {
     const {
       className,
-      github: { actions, repos, isLoading }
+      github: { actions, repos, isLoading, error }
     } = this.props;
     return (
       <div className={className}>
@@ -68,7 +68,15 @@ class App extends Component {
                   {repos.map(repo => (
                     <StyledRepo {...repo} key={repo.id} />
                   ))}
-                  {isLoading && <p className="loading">Loading...</p>}
+                  {isLoading && <p className="status">Loading...</p>}
+                  {error &&
+                    error.code === 404 && (
+                      <p className="status">No repos are matched.</p>
+                    )}
+                  {error &&
+                    error.code !== 404 && (
+                      <p className="status">Oops! Something wrong!</p>
+                    )}
                 </div>
               );
             }}
@@ -108,10 +116,10 @@ const StyledApp = styled(App)`
 
     .infinite-scroll {
       overflow: auto;
-      height: calc(100vh - 120px - 20px);
+      height: calc(100vh - 120px - 30px);
     }
 
-    .loading {
+    .status {
       font-size: ${rem('25px')};
       font-weight: 600;
       text-align: center;

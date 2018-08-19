@@ -5,13 +5,19 @@ import client from '../apollo/';
 import { QUERY_REPOS } from '../apollo/gql';
 
 const cx = createContext({});
+
+const NOT_FOUND_ERROR = new Error('not found');
+NOT_FOUND_ERROR.code = 404;
+NOT_FOUND_ERROR.desc = 'not found error';
+
 class Provider extends Component {
   defaultValues = {
     isLoading: false,
     keyword: '',
     repos: [],
     nextPage: 1,
-    perPage: 10
+    perPage: 10,
+    error: null
   };
 
   constructor(props) {
@@ -22,6 +28,7 @@ class Provider extends Component {
       actions: {
         setKeyword: this.setKeyword,
         setLoadingState: this.setLoadingState,
+        setError: this.setError,
         searchRepos: this.searchRepos,
         fetchMore: this.fetchMore,
         addRepos: this.addRepos,
@@ -40,8 +47,12 @@ class Provider extends Component {
 
   setLoadingState = (isLoading = false) => this._setStateAsync({ isLoading });
 
+  setError = ({ desc, code, obj }) => {
+    return this._setStateAsync({ error: { desc, code, obj } });
+  };
+
   searchRepos = async () => {
-    await this.resetRepos(['repos', 'nextPage', 'perPage']);
+    await this.resetRepos(['repos', 'nextPage', 'perPage', 'error']);
     await this.fetchMore();
   };
 
@@ -59,10 +70,19 @@ class Provider extends Component {
           page: nextPage
         }
       });
+      const repos = get(data, ['searchRepos', 'items']);
+      if (!repos || repos.length < 1) throw NOT_FOUND_ERROR;
+
       await Promise.all([
         this._setStateAsync(prev => ({ nextPage: prev.nextPage + 1 })),
-        this.addRepos(get(data, ['searchRepos', 'items']))
+        this.addRepos(repos)
       ]);
+    } catch (error) {
+      this.setError({
+        desc: error.desc,
+        code: error.code,
+        obj: error
+      });
     } finally {
       await this.setLoadingState(false);
     }
