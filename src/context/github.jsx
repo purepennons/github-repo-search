@@ -1,7 +1,7 @@
 import React, { createContext, Component } from 'react';
 import { pick, get, isFinite, noop } from 'lodash';
 import Bottleneck from 'bottleneck';
-import PCancelable from 'p-cancelable';
+import PCancelable from '../lib/p-cancelable/';
 
 import client from '../apollo/';
 import { QUERY_REPOS } from '../apollo/gql';
