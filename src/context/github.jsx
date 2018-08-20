@@ -8,10 +8,7 @@ import { NOT_FOUND_ERROR } from '../constants/error';
 
 const cx = createContext({});
 
-const limiter = new Bottleneck({
-  maxConcurrent: 1,
-  minTime: 6000
-});
+const limiter = new Bottleneck(1, 6000);
 
 class Provider extends Component {
   defaultValues = {
