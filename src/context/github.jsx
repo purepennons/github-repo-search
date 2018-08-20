@@ -65,6 +65,8 @@ class Provider extends Component {
 
   fetchMore = async () => {
     const { keyword, nextPage, perPage } = this.state;
+    await this.resetRepos(['error']);
+
     if (!keyword) return;
 
     await this.setLoadingState(true);

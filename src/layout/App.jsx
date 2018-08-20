@@ -110,12 +110,8 @@ class App extends Component {
               {() => {
                 return (
                   <div>
-                    {repos.map(repo => (
-                      <StyledRepo
-                        {...repo}
-                        key={repo.id}
-                        height={$repoHeight}
-                      />
+                    {repos.map((repo, idx) => (
+                      <StyledRepo {...repo} key={idx} height={$repoHeight} />
                     ))}
                     {isLoading && <p className="status">Loading...</p>}
                     {error &&
