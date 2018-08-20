@@ -1,6 +1,7 @@
 import React, { createContext, Component } from 'react';
-import { pick, get, isFinite } from 'lodash';
+import { pick, get, isFinite, noop } from 'lodash';
 import Bottleneck from 'bottleneck';
+import PCancelable from 'p-cancelable';
 
 import client from '../apollo/';
 import { QUERY_REPOS } from '../apollo/gql';
@@ -9,6 +10,17 @@ import { NOT_FOUND_ERROR } from '../constants/error';
 const cx = createContext({});
 
 const limiter = new Bottleneck(1, 6000);
+
+const req = args => {
+  return new PCancelable((resolve, reject, onCancel) => {
+    onCancel(noop);
+
+    return limiter
+      .schedule(() => client.query(args))
+      .then(res => resolve(res))
+      .catch(err => reject(err));
+  });
+};
 
 class Provider extends Component {
   defaultValues = {
@@ -22,7 +34,7 @@ class Provider extends Component {
 
   constructor(props) {
     super(props);
-    this.fetchPromise = null;
+    this.fetchPromiseQueue = [];
     this.state = {
       ...this.defaultValues,
       actions: {
@@ -38,8 +50,19 @@ class Provider extends Component {
     };
   }
 
+  componentWillUnmount() {
+    this._cancelPrevFetchTasks();
+  }
+
   _setStateAsync = nextState => {
     return new Promise(resolve => this.setState(nextState, () => resolve()));
+  };
+
+  _cancelPrevFetchTasks = () => {
+    while (this.fetchPromiseQueue.length > 0) {
+      const p = this.fetchPromiseQueue.shift();
+      if (p) p.cancel('cacnel search task');
+    }
   };
 
   setKeyword = keyword => {
@@ -59,6 +82,7 @@ class Provider extends Component {
   };
 
   searchRepos = async () => {
+    this._cancelPrevFetchTasks();
     await this.resetRepos(['repos', 'nextPage', 'error']);
     await this.fetchMore();
   };
@@ -70,17 +94,20 @@ class Provider extends Component {
     if (!keyword) return;
 
     await this.setLoadingState(true);
+
+    let fetchPromise = null;
     try {
-      const { data } = await limiter.schedule(() =>
-        client.query({
-          query: QUERY_REPOS,
-          variables: {
-            keyword,
-            perPage,
-            page: nextPage
-          }
-        })
-      );
+      fetchPromise = req({
+        query: QUERY_REPOS,
+        variables: {
+          keyword,
+          perPage,
+          page: nextPage
+        }
+      });
+      this.fetchPromiseQueue.push(fetchPromise);
+
+      const { data } = await fetchPromise;
       const repos = get(data, ['searchRepos', 'items']);
       if (!repos || repos.length < 1) throw NOT_FOUND_ERROR;
 
@@ -89,6 +116,8 @@ class Provider extends Component {
         this.addRepos(repos)
       ]);
     } catch (error) {
+      if (fetchPromise && fetchPromise.isCanceled) return;
+
       this.setError({
         desc: error.desc,
         code: error.code,
