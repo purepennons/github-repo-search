@@ -158,8 +158,6 @@ const StyledApp = styled(App)`
   }
 
   main {
-    padding-bottom: 20px;
-
     .infinite-scroll {
       overflow: auto;
       height: calc(100vh - 120px - 30px);
