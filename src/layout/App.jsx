@@ -1,11 +1,13 @@
 import React, { Component, createRef } from 'react';
 import styled from 'styled-components';
 import { rem } from 'polished';
+import { debounce } from 'lodash';
 
 import Context from '../context/';
 import DebounceHookOnChange from '../components/global/DebounceHookOnChange/DebounceHookOnChange';
 import InfiniteScroll from '../components/InfiniteScroll/InfiniteScroll';
 import StyledRepo from '../components/StyledRepo/StyledRepo';
+import { $repoHeight, $primaryColor, $messageColor } from '../constants/style';
 
 const { withContextConsumer } = Context;
 
@@ -15,9 +17,32 @@ class App extends Component {
     this.inputRef = createRef();
   }
 
-  componentDidMount() {
+  async componentDidMount() {
+    await this.changePerPage();
     this.inputRef.current.focus();
+
+    window.addEventListener('resize', this.handleResize);
   }
+
+  componentWillUnmount() {
+    window.removeEventListener('resize', this.handleResize);
+  }
+
+  changePerPage = debounce(() => {
+    const {
+      github: { actions }
+    } = this.props;
+    const windowHeight =
+      window.innerHeight ||
+      document.documentElement.clientHeight ||
+      document.body.clientHeight;
+
+    return actions.setPerPage(parseInt(windowHeight / $repoHeight, 10));
+  }, 500).bind(this);
+
+  handleResize = event => {
+    return this.changePerPage();
+  };
 
   handleChange = event => {
     const {
@@ -66,7 +91,7 @@ class App extends Component {
               return (
                 <div>
                   {repos.map(repo => (
-                    <StyledRepo {...repo} key={repo.id} />
+                    <StyledRepo {...repo} key={repo.id} height={$repoHeight} />
                   ))}
                   {isLoading && <p className="status">Loading...</p>}
                   {error &&
@@ -96,7 +121,7 @@ const StyledApp = styled(App)`
     flex-flow: row nowrap;
     justify-content: center;
     align-items: center;
-    border-bottom: 5px solid #00c7b9;
+    border-bottom: 5px solid ${$primaryColor};
     margin-bottom: 20px;
 
     input[type='text'] {
@@ -106,7 +131,7 @@ const StyledApp = styled(App)`
       line-height: 60px;
       padding: 5px 5%;
       text-align: center;
-      border: 5px solid #00c7b9;
+      border: 5px solid ${$primaryColor};
       border-radius: 5px;
     }
   }
@@ -123,7 +148,7 @@ const StyledApp = styled(App)`
       font-size: ${rem('25px')};
       font-weight: 600;
       text-align: center;
-      color: #595a53;
+      color: ${$messageColor};
     }
   }
 `;

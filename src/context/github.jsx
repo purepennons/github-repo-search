@@ -1,15 +1,12 @@
 import React, { createContext, Component } from 'react';
-import { pick, get } from 'lodash';
+import { pick, get, isFinite } from 'lodash';
 import Bottleneck from 'bottleneck';
 
 import client from '../apollo/';
 import { QUERY_REPOS } from '../apollo/gql';
+import { NOT_FOUND_ERROR } from '../constants/error';
 
 const cx = createContext({});
-
-const NOT_FOUND_ERROR = new Error('not found');
-NOT_FOUND_ERROR.code = 404;
-NOT_FOUND_ERROR.desc = 'not found error';
 
 const limiter = new Bottleneck({
   maxConcurrent: 1,
@@ -34,6 +31,7 @@ class Provider extends Component {
       actions: {
         setKeyword: this.setKeyword,
         setLoadingState: this.setLoadingState,
+        setPerPage: this.setPerPage,
         setError: this.setError,
         searchRepos: this.searchRepos,
         fetchMore: this.fetchMore,
@@ -53,12 +51,18 @@ class Provider extends Component {
 
   setLoadingState = (isLoading = false) => this._setStateAsync({ isLoading });
 
+  setPerPage = (perPage = this.defaultValues.perPage) => {
+    return this._setStateAsync(prev => ({
+      perPage: isFinite(perPage) ? parseInt(perPage, 10) : prev.perPage
+    }));
+  };
+
   setError = ({ desc, code, obj }) => {
     return this._setStateAsync({ error: { desc, code, obj } });
   };
 
   searchRepos = async () => {
-    await this.resetRepos(['repos', 'nextPage', 'perPage', 'error']);
+    await this.resetRepos(['repos', 'nextPage', 'error']);
     await this.fetchMore();
   };
 

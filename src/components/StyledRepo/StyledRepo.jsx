@@ -2,6 +2,9 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import styled from 'styled-components';
 import LinesEllipsis from 'react-lines-ellipsis';
+import { isFinite } from 'lodash';
+
+import { $primaryColor, $titleColor } from '../../constants/style';
 
 const Repo = ({
   className,
@@ -39,57 +42,61 @@ const Repo = ({
   );
 };
 
-const StyledRepo = styled(Repo)`
-height: 200px;
-border-bottom: 2px solid #8eacb7;
-position: relative;
-padding: 20px;
-margin: 30px auto;
+const StyledRepo = styled(Repo).attrs({
+  height: props =>
+    isFinite(props.height)
+      ? `${parseInt(props.height, 10)}px`
+      : props.height || '200px'
+})`
+  height: ${props => props.height};
+  border-bottom: 2px solid #8eacb7;
+  position: relative;
+  padding: 20px;
+  margin: 30px auto;
 
-.left {
-  h2 {
-    a {
-      text-decoration: none;
-      color: #62b2ff;
+  .left {
+    h2 {
+      a {
+        text-decoration: none;
+        color: ${$titleColor};
 
-      &:active {
-        color: #62b2ff;
+        &:active {
+          color: ${$titleColor};
+        }
+      }
+    }
+
+    div {
+      max-width: 65%;
+      line-height: 1.5;
+    }
+  }
+
+  .right {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+
+    > * {
+      line-height: 30px;
+      margin: 10px;
+    }
+
+    .avatar {
+      img {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        border: 2px solid ${$primaryColor};
+        vertical-align: middle;
       }
     }
   }
-
-  div {
-    max-width: 65%;
-    line-height: 1.5;
-  }
-}
-
-.right {
-  position: absolute;
-  bottom: 20px;
-  right: 20px;
-
-  > * {
-    line-height: 30px;
-    margin: 10px;
-  }
-
-  .avatar {
-
-    img {
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      border: 2px solid #00c7b9;
-      vertical-align: middle;
-    }
-  }
-}
 `;
-
 
 StyledRepo.propTypes = {
   className: PropTypes.string,
+  height: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
   id: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
   full_name: PropTypes.string,
   html_url: PropTypes.string,
@@ -106,6 +113,7 @@ StyledRepo.propTypes = {
 
 StyledRepo.defaultProps = {
   className: '',
+  height: '200px',
   full_name: '',
   html_url: '',
   description: '',
@@ -119,4 +127,4 @@ StyledRepo.defaultProps = {
 };
 
 /** @component */
-export default StyledRepo
+export default StyledRepo;
