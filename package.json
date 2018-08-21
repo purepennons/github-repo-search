@@ -9,6 +9,7 @@
     "bottleneck": "1.16.0",
     "graphql": "^0.13.2",
     "graphql-anywhere": "^4.1.16",
+    "invariant": "^2.2.4",
     "is-promise": "^2.1.0",
     "lodash": "^4.17.10",
     "normalize.css": "^8.0.0",

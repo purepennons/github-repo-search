@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { isFunction, isEqual, noop, debounce, pick } from 'lodash';
-import isPromise from 'is-promise';
+
+import { callAsync } from '../../../lib/utlis';
 
 class DebounceHookOnChange extends Component {
   static propTypes = {
@@ -69,17 +70,14 @@ class DebounceHookOnChange extends Component {
     return debounce(onDebounceChange, wait, options).bind(this);
   };
 
-  handleChange = (...args) => {
+  handleChange = async (...args) => {
     const { onChange } = this.props;
     const onDebounceChange = isFunction(this.onDebounceChange)
       ? this.onDebounceChange
       : noop;
 
-    if (!isFunction(onChange)) return;
-
-    const changeResult = onChange(...args);
-    if (!isPromise(changeResult)) return onDebounceChange(...args);
-    return changeResult.then(() => onDebounceChange(...args));
+    await callAsync(onChange, ...args);
+    await callAsync(onDebounceChange, ...args);
   };
 
   render() {

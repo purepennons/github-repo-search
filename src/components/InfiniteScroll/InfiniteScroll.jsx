@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { isFunction, noop } from 'lodash';
-import isPromise from 'is-promise';
+
+import { callAsync } from '../../lib/utlis';
 
 class InfiniteScroll extends Component {
   static propTypes = {
@@ -36,11 +37,7 @@ class InfiniteScroll extends Component {
       this.setState(
         _ => ({ isLoading: true, data: null, error: null }),
         () => {
-          const result = onFetchMore(...fetchArgs);
-          if (!isPromise(result)) {
-            return this.setState(_ => ({ isLoading: false, data: result }));
-          }
-          return result
+          return callAsync(onFetchMore, ...fetchArgs)
             .then(data => this.setState(_ => ({ data, isLoading: false })))
             .catch(error => this.setState(_ => ({ error, isLoading: false })));
         }
@@ -51,11 +48,7 @@ class InfiniteScroll extends Component {
   render() {
     const { children, className, style } = this.props;
     return (
-      <div
-        className={className}
-        style={style}
-        onScroll={this.handleScroll}
-      >
+      <div className={className} style={style} onScroll={this.handleScroll}>
         {isFunction(children)
           ? children(this.state)
           : React.children.only(
